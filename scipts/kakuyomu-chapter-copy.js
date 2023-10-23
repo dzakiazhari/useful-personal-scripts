@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kakuyomu Chapter Copy
 // @namespace    DA
-// @version      1.0
+// @version      1.2
 // @description  Copy the chapter content from a Kakuyomu episode page.
 // @author       DA
 // @license      GNU AGPLv3
@@ -12,61 +12,117 @@
 (function () {
     'use strict';
 
-    var buttonContainer = createButtonContainer();
-    var copyButton = createButton("Copy Chapter", "#4CAF50", copyToClipboard, "copy-button");
-    var nextButton = createButton("Next Episode", "#2196F3", goToNextChapter);
-    var previousButton = createButton("Previous Episode", "#2196F3", goToPreviousChapter);
+    scrollToTop(); // Scroll to the top of the page
 
-    buttonContainer.appendChild(previousButton);
-    buttonContainer.appendChild(copyButton);
-    buttonContainer.appendChild(nextButton);
+    // Create a MutationObserver to handle dynamic page changes
+    var observer = new MutationObserver(handlePageChanges);
+    var observerConfig = { childList: true, subtree: true };
+    observer.observe(document.body, observerConfig);
+
+    // Create button container
+    var buttonContainer = document.createElement("div");
+    buttonContainer.style.position = "fixed";
+    buttonContainer.style.bottom = "20px";
+    buttonContainer.style.left = "50%";
+    buttonContainer.style.transform = "translateX(-50%)";
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "center";
+    buttonContainer.style.alignItems = "center"; // Add alignment property
+    buttonContainer.style.gap = "4px"; // Add gap between buttons
+
+    var buttonGroup = document.createElement("div"); // Create the button group container
+    buttonGroup.className = "btn-group"; // Add the btn-group class
+
+    var previousButton = createButton("Previous Episode", goToPreviousChapter, true);
+    var copyButton = createButton("Copy Chapter", copyToClipboard, false);
+    var nextButton = createButton("Next Episode", goToNextChapter, false, true);
+
+    // Add the btn-group__item class to each button
+    previousButton.classList.add("btn-group__item");
+    copyButton.classList.add("btn-group__item");
+    nextButton.classList.add("btn-group__item");
+
+    buttonGroup.appendChild(previousButton);
+    buttonGroup.appendChild(copyButton);
+    buttonGroup.appendChild(nextButton);
+
+    buttonContainer.appendChild(buttonGroup);
+
     document.body.appendChild(buttonContainer);
 
-    function createButtonContainer() {
-        var container = document.createElement("div");
-        container.style.position = "fixed";
-        container.style.bottom = "20px";
-        container.style.left = "50%";
-        container.style.transform = "translateX(-50%)";
-        container.style.display = "flex";
-        container.style.justifyContent = "space-between";
-        container.style.alignItems = "center";
-        container.style.padding = "5px";
-        container.style.backgroundColor = "#f1f1f1";
-        container.style.borderRadius = "4px";
-        return container;
+    function handlePageChanges() {
+        // Handle dynamic page changes here
+        // For example, you can reattach event listeners or update button states
+        console.log("Page has changed");
     }
 
-    function createButton(text, backgroundColor, clickAction, className) {
+    function createButton(text, clickAction, isFirstButton, isLastButton) {
         var button = document.createElement("button");
         button.textContent = text;
-        button.style.fontSize = "16px";
         button.style.padding = "5px 10px";
         button.style.border = "none";
-        button.style.backgroundColor = backgroundColor;
+        button.style.backgroundColor = "#4CAF50";
         button.style.color = "white";
         button.style.cursor = "pointer";
+        button.style.borderRadius = "0px"; // Default border radius
+
+        if (isFirstButton) {
+            button.style.borderRadius = "30px 0 0 30px"; // Rounded left side for the first button
+        }
+
+        if (isLastButton) {
+            button.style.borderRadius = "0 30px 30px 0"; // Rounded right side for the last button
+            button.style.borderRight = "1px solid rgba(0, 0, 0, 0.1)"; // Add right border to separate buttons
+        }
+
+        button.style.whiteSpace = "nowrap"; // Prevent text from wrapping
+
         button.addEventListener("click", function () {
             console.log(text + " button clicked.");
-            clickAction();
-            if (className) {
-                button.classList.add(className);
-            }
+            clickAction(button);
         });
+
         return button;
     }
 
-    function copyToClipboard() {
+    function copyToClipboard(button) {
         console.log("Copy button clicked.");
+        button.disabled = true; // Disable the button to prevent multiple clicks
+
         var chapterContainer = document.getElementById("contentMain");
         if (!chapterContainer) {
             console.log("Unable to find chapter content on this page.");
+            button.disabled = false; // Re-enable the button
             return;
         }
+
         var chapterContent = chapterContainer.innerText.trim();
-        copyTextToClipboard(chapterContent);
-        copyButton.style.backgroundColor = "#2196F3"; // Change button color to blue
+        copyTextToClipboard(chapterContent)
+            .then(function () {
+                console.log("Chapter content has been copied to the clipboard.");
+                button.style.backgroundColor = "#2196F3"; // Change button color to blue
+            })
+            .catch(function (error) {
+                console.log("Failed to copy chapter content:", error);
+                button.disabled = false; // Re-enable the button
+                // Display an error message to the user
+                alert("Failed to copy chapter content. Please try again.");
+            });
     }
+
+    function copyTextToClipboard(text) {
+        return new Promise(function (resolve, reject) {
+            if (!navigator.clipboard) {
+                reject("Clipboard API is not supported.");
+                return;
+            }
+
+            navigator.clipboard.writeText(text)
+                .then(resolve)
+                .catch(reject);
+        });
+    }
+
 
     function goToNextChapter() {
         console.log("Next episode button clicked.");
@@ -88,22 +144,6 @@
         }
         previousEpisodeButton.click();
         scrollToTop(); // Scroll to the top of the page
-    }
-
-    function copyTextToClipboard(text) {
-        var textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";
-        textarea.style.top = 0;
-        textarea.style.left = 0;
-        textarea.style.opacity = 0;
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-        console.log("Chapter content has been copied to the clipboard.");
-        console.log("Copied chapter content:", text);
     }
 
     function scrollToTop() {

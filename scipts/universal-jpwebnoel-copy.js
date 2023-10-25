@@ -7,7 +7,7 @@
 // @license      GNU AGPLv3
 // @match        https://kakuyomu.jp/works/*/episodes/*
 // @match        https://syosetu.org/novel/*/*
-// @match        https://*.syosetu.com/*/*/
+// @match        https://*.syosetu.com/n*/*/
 // @grant        none
 // ==/UserScript==
 // Use this script with Translation Aggregator (TA) plus MeCab, and JParser to study Japanese by reading novel
@@ -43,7 +43,6 @@
 		previousPageSelector: 'div.novel_bn a:nth-child(1):not(:has(span))',
 		nextPageSelector: 'div.novel_bn a:nth-child(2):not(:has(span))'
 	};
-
 
 	const siteConfigs = [{
 			urlPattern: /https:\/\/kakuyomu\.jp\/works\/.*\/episodes\/.*/,
@@ -187,34 +186,45 @@
 	}
 
 	// Previous and Next
-	function goToPreviousChapter(button) {
-		console.log("Previous Chapter button clicked.");
-		button.disabled = true;
+  function goToPreviousChapter() {
+    console.log("Previous Chapter button clicked.");
 
-		var previousPageLink = document.querySelector(previousPageSelector);
-		if (!previousPageLink) {
-			console.log("Unable to find previous chapter link.");
-			button.disabled = false;
-			return;
-		}
+    var previousPageLink = document.querySelector(previousPageSelector);
+    if (!previousPageLink) {
+      console.log("Unable to find previous chapter link.");
+      return;
+    }
 
-		previousPageLink.click();
-	}
+    previousPageLink.click();
+  }
 
+  function goToNextChapter() {
+    console.log("Next Chapter button clicked.");
 
-	function goToNextChapter(button) {
-		console.log("Next Chapter button clicked.");
-		button.disabled = true;
+    var nextPageLink = document.querySelector(nextPageSelector);
+    if (!nextPageLink) {
+      console.log("Unable to find next chapter link.");
+      return;
+    }
 
-		var nextPageLink = document.querySelector(nextPageSelector);
-		if (!nextPageLink) {
-			console.log("Unable to find next chapter link.");
-			button.disabled = false;
-			return;
-		}
+    nextPageLink.click();
+  }
 
-		nextPageLink.click();
-	}
+  // Event listener for the left arrow key
+  document.addEventListener("keydown", function(event) {
+    if (event.keyCode === 37) {
+      // Left arrow key
+      goToPreviousChapter();
+    }
+  });
+
+  // Event listener for the right arrow key
+  document.addEventListener("keydown", function(event) {
+    if (event.keyCode === 39) {
+      // Right arrow key
+      goToNextChapter();
+    }
+  });
 
 	function scrollToTop() {
 		window.scrollTo({

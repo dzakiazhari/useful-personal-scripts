@@ -1,28 +1,21 @@
 // ==UserScript==
 // @name         Universal JP RAW Novel Chapter Copy
 // @namespace    DA
-// @version      1.2
+// @version      1.3
 // @description  Copy the chapter content from Japanese novel websites.
 // @author       DA
 // @license      GNU AGPLv3
 // @match        https://kakuyomu.jp/works/*/episodes/*
-// @match        https://syosetu.org/novel/*/*
+// @match        https://syosetu.org/novel/*/*.html
 // @match        https://*.syosetu.com/n*/*/
+// @exclude      https://*.syosetu.com/novelreview/*
+// @require      http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js
 // @grant        none
 // ==/UserScript==
 // Use this script with Translation Aggregator (TA) plus MeCab, and JParser to study Japanese by reading novel
 
 (function() {
 	'use strict';
-	// Custom implementation of :contains selector, currently unused
-	function containsSelector(selector, text) {
-		var elements = document.querySelectorAll(selector);
-
-		return Array.prototype.filter.call(elements, function(element) {
-			return new RegExp(text, 'i').test(element.textContent);
-		});
-	}
-
 	// Site-specific settings for Kakuyomu
 	const kakuyomuSettings = {
 		chapterContentSelector: "#contentMain",
@@ -36,12 +29,11 @@
 		nextPageSelector: 'li.novelnb a.next_page_link',
 		tableOfContentsSelector: 'li.novelmokuzi a'
 	};
-	// Site-specific settings for Narou
-  // Previous and Next only work for page 2 onwards
+	/// Site-specific settings for Narou
 	const narouSettings = {
 		chapterContentSelector: "#novel_contents",
-		previousPageSelector: 'div.novel_bn a:nth-child(1):not(:has(span))',
-		nextPageSelector: 'div.novel_bn a:nth-child(2):not(:has(span))'
+		previousPageLink: 'a:contains("<<")',
+		nextPageLink: 'a:contains(">>")'
 	};
 
 	const siteConfigs = [{
@@ -59,7 +51,6 @@
 	];
 
 	const currentSiteConfig = siteConfigs.find(config => config.urlPattern.test(window.location.href));
-
 	if (!currentSiteConfig) {
 		console.log("This script is not applicable to the current site.");
 		return;
@@ -72,14 +63,14 @@
 	} = currentSiteConfig.settings;
 
 	scrollToTop();
-
-
 	var observer = new MutationObserver(handlePageChanges);
 	var observerConfig = {
 		childList: true,
 		subtree: true
 	};
 	observer.observe(document.body, observerConfig);
+	//console.log("prevlink:", previousPageLink);
+	//console.log("nextlink:", nextPageLink);
 
 	var buttonContainer = document.createElement("div");
 	buttonContainer.style.position = "fixed";
@@ -185,54 +176,62 @@
 		});
 	}
 
-	// Previous and Next
-  function goToPreviousChapter() {
-    console.log("Previous Chapter button clicked.");
+	function goToPreviousChapter() {
+		console.log("Previous Chapter button clicked.");
+		var previousPageLink = $(narouSettings.previousPageLink);
+		var previousPageSelectorLink = document.querySelector(previousPageSelector);
 
-    var previousPageLink = document.querySelector(previousPageSelector);
-    if (!previousPageLink) {
-      console.log("Unable to find previous chapter link.");
-      return;
-    }
+		if (previousPageLink.length > 0) {
+			console.log("Previous Link:", previousPageLink[0].href);
+			window.location = previousPageLink[0].href; // Treat it as a link
+		} else if (previousPageSelectorLink) {
+			previousPageSelectorLink.click();
+			scrollToTop();
+		} else {
+			console.log("Unable to find previous chapter link.");
+		}
+	}
 
-    previousPageLink.click();
-  }
+	function goToNextChapter() {
+		console.log("Next Chapter button clicked.");
+		var nextPageLink = $(narouSettings.nextPageLink);
+		var nextPageSelectorLink = document.querySelector(nextPageSelector);
 
-  function goToNextChapter() {
-    console.log("Next Chapter button clicked.");
+		if (nextPageLink.length > 0) {
+			console.log("Next Link:", nextPageLink[0].href);
+			window.location = nextPageLink[0].href; // Treat it as a link
+		} else if (nextPageSelectorLink) {
+			nextPageSelectorLink.click();
+			scrollToTop();
+		} else {
+			console.log("Unable to find next chapter link.");
+		}
+	}
 
-    var nextPageLink = document.querySelector(nextPageSelector);
-    if (!nextPageLink) {
-      console.log("Unable to find next chapter link.");
-      return;
-    }
+	// Event listener for the left arrow key
+	document.addEventListener("keydown", function(event) {
+		if (event.keyCode === 37) {
+			// Left arrow key
+			goToPreviousChapter();
+		}
+	});
 
-    nextPageLink.click();
-  }
-
-  // Event listener for the left arrow key
-  document.addEventListener("keydown", function(event) {
-    if (event.keyCode === 37) {
-      // Left arrow key
-      goToPreviousChapter();
-    }
-  });
-
-  // Event listener for the right arrow key
-  document.addEventListener("keydown", function(event) {
-    if (event.keyCode === 39) {
-      // Right arrow key
-      goToNextChapter();
-    }
-  });
+	// Event listener for the right arrow key
+	document.addEventListener("keydown", function(event) {
+		if (event.keyCode === 39) {
+			// Right arrow key
+			goToNextChapter();
+		}
+	});
 
 	function scrollToTop() {
 		window.scrollTo({
+			left: 0,
 			top: 0,
-			behavior: "smooth"
+			behavior: 'smooth'
 		});
+		console.log("Scroll to top.");
 	}
 
-	// End
 
 })();

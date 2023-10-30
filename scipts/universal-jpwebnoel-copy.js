@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Universal JP RAW Novel Chapter Copy
 // @namespace    DA
-// @version      1.3
+// @version      1.4
 // @description  Copy the chapter content from Japanese novel websites.
 // @author       DA
 // @license      GNU AGPLv3
@@ -9,7 +9,7 @@
 // @match        https://syosetu.org/novel/*/*.html
 // @match        https://*.syosetu.com/n*/*/
 // @exclude      https://*.syosetu.com/novelreview/*
-// @require      http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
 // @grant        none
 // ==/UserScript==
 // Use this script with Translation Aggregator (TA) plus MeCab, and JParser to study Japanese by reading novel
@@ -51,6 +51,7 @@
 	];
 
 	const currentSiteConfig = siteConfigs.find(config => config.urlPattern.test(window.location.href));
+
 	if (!currentSiteConfig) {
 		console.log("This script is not applicable to the current site.");
 		return;
@@ -63,14 +64,14 @@
 	} = currentSiteConfig.settings;
 
 	scrollToTop();
+
+
 	var observer = new MutationObserver(handlePageChanges);
 	var observerConfig = {
 		childList: true,
 		subtree: true
 	};
 	observer.observe(document.body, observerConfig);
-	//console.log("prevlink:", previousPageLink);
-	//console.log("nextlink:", nextPageLink);
 
 	var buttonContainer = document.createElement("div");
 	buttonContainer.style.position = "fixed";
@@ -175,6 +176,7 @@
 			resolve();
 		});
 	}
+
 
 	function goToPreviousChapter() {
 		console.log("Previous Chapter button clicked.");

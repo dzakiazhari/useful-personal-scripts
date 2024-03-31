@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Universal JP RAW Novel Chapter Copy
 // @namespace    DA
-// @version      1.4
+// @version      1.2
 // @description  Copy the chapter content from Japanese novel websites.
 // @author       DA
 // @license      GNU AGPLv3
@@ -29,11 +29,12 @@
 		nextPageSelector: 'li.novelnb a.next_page_link',
 		tableOfContentsSelector: 'li.novelmokuzi a'
 	};
+	
 	/// Site-specific settings for Narou
 	const narouSettings = {
 		chapterContentSelector: "#novel_contents",
-		previousPageLink: 'a:contains("<<")',
-		nextPageLink: 'a:contains(">>")'
+		previousPageLink: 'a:contains("前へ")',
+		nextPageLink: 'a:contains("次へ")'
 	};
 
 	const siteConfigs = [{
@@ -72,6 +73,8 @@
 		subtree: true
 	};
 	observer.observe(document.body, observerConfig);
+  //console.log("prevlink:", previousPageLink);
+  //console.log("nextlink:", nextPageLink);
 
 	var buttonContainer = document.createElement("div");
 	buttonContainer.style.position = "fixed";
@@ -178,62 +181,65 @@
 	}
 
 
-	function goToPreviousChapter() {
-		console.log("Previous Chapter button clicked.");
-		var previousPageLink = $(narouSettings.previousPageLink);
-		var previousPageSelectorLink = document.querySelector(previousPageSelector);
+  function goToPreviousChapter() {
+    console.log("Previous Chapter button clicked.");
+    var previousPageLink = $(narouSettings.previousPageLink);
+    var previousPageSelectorLink = document.querySelector(previousPageSelector);
 
-		if (previousPageLink.length > 0) {
-			console.log("Previous Link:", previousPageLink[0].href);
-			window.location = previousPageLink[0].href; // Treat it as a link
-		} else if (previousPageSelectorLink) {
-			previousPageSelectorLink.click();
-			scrollToTop();
-		} else {
-			console.log("Unable to find previous chapter link.");
-		}
-	}
+    if (previousPageLink.length > 0) {
+      console.log("Previous Link:", previousPageLink[0].href);
+      window.location = previousPageLink[0].href; // Treat it as a link
+    } else if (previousPageSelectorLink) {
+      previousPageSelectorLink.click();
+      scrollToTop();
+    } else {
+      console.log("Unable to find previous chapter link.");
+    }
+  }
 
-	function goToNextChapter() {
-		console.log("Next Chapter button clicked.");
-		var nextPageLink = $(narouSettings.nextPageLink);
-		var nextPageSelectorLink = document.querySelector(nextPageSelector);
+  function goToNextChapter() {
+    console.log("Next Chapter button clicked.");
+    var nextPageLink = $(narouSettings.nextPageLink);
+    var nextPageSelectorLink = document.querySelector(nextPageSelector);
 
-		if (nextPageLink.length > 0) {
-			console.log("Next Link:", nextPageLink[0].href);
-			window.location = nextPageLink[0].href; // Treat it as a link
-		} else if (nextPageSelectorLink) {
-			nextPageSelectorLink.click();
-			scrollToTop();
-		} else {
-			console.log("Unable to find next chapter link.");
-		}
-	}
+    if (nextPageLink.length > 0) {
+      console.log("Next Link:", nextPageLink[0].href);
+      window.location = nextPageLink[0].href; // Treat it as a link
+    } else if (nextPageSelectorLink) {
+      nextPageSelectorLink.click();
+      scrollToTop();
+    } else {
+      console.log("Unable to find next chapter link.");
+    }
+  }
 
-	// Event listener for the left arrow key
-	document.addEventListener("keydown", function(event) {
-		if (event.keyCode === 37) {
-			// Left arrow key
-			goToPreviousChapter();
-		}
-	});
+  // Event listener for the left arrow key
+  document.addEventListener("keydown", function(event) {
+    if (event.keyCode === 37) {
+      // Left arrow key
+      goToPreviousChapter();
+    }
+  });
 
-	// Event listener for the right arrow key
-	document.addEventListener("keydown", function(event) {
-		if (event.keyCode === 39) {
-			// Right arrow key
-			goToNextChapter();
-		}
-	});
+  // Event listener for the right arrow key
+  document.addEventListener("keydown", function(event) {
+    if (event.keyCode === 39) {
+      // Right arrow key
+      goToNextChapter();
+    }
+  });
 
 	function scrollToTop() {
 		window.scrollTo({
-			left: 0,
-			top: 0,
-			behavior: 'smooth'
-		});
-		console.log("Scroll to top.");
-	}
+    left: 0,
+    top: 0,
+    behavior: 'smooth'
+  });
+  console.log("Scroll to top.");
+  }
 
+
+
+	// End
 
 })();
